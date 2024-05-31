@@ -25,12 +25,12 @@ jobs:
         uses: snok/install-poetry@v1
 
       - name: Install dependencies
-        run: |
-          poetry install
-          source .venv/bin/activate
+        run: poetry install
 
       - name: Run tests with coverage
-        run: pytest --cov
+        run: |
+          source .venv/bin/activate
+          pytest --cov
 
       - name: Rename code coverage data file
         shell: bash
@@ -100,6 +100,7 @@ jobs:
       - name: Merge coverage reports
         if: github.event_name == 'pull_request'
         run: |
+          source .venv/bin/activate
           coverage combine
           coverage report
           coverage xml
