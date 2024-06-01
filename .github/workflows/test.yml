@@ -85,8 +85,8 @@ jobs:
             }
 
             return {
-              artifact_url: artifact.archive_download_url
-              run_id: artifact.workflow_run.url
+              artifact_url: artifact.archive_download_url,
+              run_id: artifact.workflow_run.url,
             };
           result-encoding: string
 
