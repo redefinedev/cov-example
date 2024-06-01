@@ -31,9 +31,16 @@ jobs:
         run: poetry install
 
       - name: Run tests with coverage
+        if: github.event_name == 'pull_request'
         run: |
           source .venv/bin/activate
           pytest tests/test_calculator_new.py --cov
+
+      - name: Run tests with coverage
+        if: github.ref == 'refs/heads/main'
+        run: |
+          source .venv/bin/activate
+          pytest --cov
 
       - name: Rename code coverage data file
         shell: bash
@@ -57,6 +64,38 @@ jobs:
       ########### MAIN-END ###########
 
       ########### PR-START ###########
+
+      ### WITHOUT MERGE ###
+
+      - name: Merge coverage reports
+        if: github.event_name == 'pull_request'
+        run: |
+          source .venv/bin/activate
+          coverage xml
+          diff-cover coverage.xml --html-report coverage.html
+
+      - name: Upload PR coverage xml
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-pr-xml-partial
+          retention-days: 1
+          path: coverage.xml
+
+      - name: Upload PR coverage html
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-pr-html-partial
+          retention-days: 1
+          path: coverage.html
+
+      - name: cleanup
+        if: github.event_name == 'pull_request'
+        run: |
+          rm -f coverage.xml coverage.html
+
+      ### WITH MERGE ###
 
       - name: Fetch coverage report from main
         if: github.event_name == 'pull_request'
