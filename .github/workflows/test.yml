@@ -61,6 +61,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            const core = require('@actions/core');  // Import core library
             const run_id = await github.rest.actions.listWorkflowRunsForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -87,10 +88,9 @@ jobs:
 
             console.log(artifact);
 
-            return {
-              artifact_url: artifact.archive_download_url,
-              run_id: artifact.workflow_run.url,
-            };
+            core.setOutput('artifact_url', artifact.archive_download_url);  // Set output
+            core.setOutput('run_id', artifact.workflow_run.url);  // Set another output if needed
+
           result-encoding: string
 
       - name: Download artifact
