@@ -65,6 +65,13 @@ jobs:
 
       ########### PR-START ###########
 
+      # Required for diff-cover which looks for merge-base between main and PR
+      - name: Fetch Origin/main for comparison
+        if: github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: git fetch origin main
+
       ### WITHOUT MERGE ###
 
       - name: Merge coverage reports
@@ -141,13 +148,6 @@ jobs:
           unzip coverage-report-main.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # Required for diff-cover which looks for merge-base between main and PR
-      - name: Fetch Origin/main for comparison
-        if: github.event_name == 'pull_request'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: git fetch origin main
 
       - name: Merge coverage reports
         if: github.event_name == 'pull_request'
