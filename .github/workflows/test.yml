@@ -14,10 +14,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
@@ -25,12 +25,12 @@ jobs:
         uses: snok/install-poetry@v1
 
       - name: Install dependencies
-        run: |
-          poetry install
-          source .venv/bin/activate
+        run: poetry install
 
       - name: Run tests with coverage
-        run: pytest --cov
+        run: |
+          source .venv/bin/activate
+          pytest --cov
 
       - name: Rename code coverage data file
         shell: bash
@@ -56,8 +56,9 @@ jobs:
       ########### PR-START ###########
 
       - name: Fetch coverage report from main
+        if: github.event_name == 'pull_request'
         id: fetch-artifact
-        uses: actions/github-script@v3
+        uses: actions/github-script@v7
         with:
           script: |
             const run_id = await github.rest.actions.listWorkflowRunsForRepo({
@@ -85,12 +86,13 @@ jobs:
             }
 
             return {
-              artifact_url: artifact.archive_download_url
-              run_id: artifact.workflow_run.url
+              artifact_url: artifact.archive_download_url,
+              run_id: artifact.workflow_run.url,
             };
           result-encoding: string
 
       - name: Download artifact
+        if: github.event_name == 'pull_request'
         run: |
           curl -sL -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -H "Accept: application/vnd.github.v3+json" ${{ steps.fetch-artifact.outputs.artifact_url }} > coverage-report-main.zip
           unzip coverage-report-main.zip
@@ -100,6 +102,7 @@ jobs:
       - name: Merge coverage reports
         if: github.event_name == 'pull_request'
         run: |
+          source .venv/bin/activate
           coverage combine
           coverage report
           coverage xml
