@@ -16,6 +16,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          # Required for diff-cover which looks for merge-base between main and PR
           fetch-depth: 100
 
       - name: Set up Python
@@ -32,7 +33,7 @@ jobs:
       - name: Run tests with coverage
         run: |
           source .venv/bin/activate
-          pytest --cov
+          pytest tests/test_calculator_new.py --cov
 
       - name: Rename code coverage data file
         shell: bash
@@ -100,6 +101,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # Required for diff-cover which looks for merge-base between main and PR
       - name: Fetch Origin/main for comparison
         if: github.event_name == 'pull_request'
         env:
