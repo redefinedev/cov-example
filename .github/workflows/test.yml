@@ -85,6 +85,8 @@ jobs:
               throw new Error("Artifact not found");
             }
 
+            console.log(artifact);
+
             return {
               artifact_url: artifact.archive_download_url,
               run_id: artifact.workflow_run.url,
