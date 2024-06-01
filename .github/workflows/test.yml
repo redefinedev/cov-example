@@ -71,6 +71,8 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           source .venv/bin/activate
+          coverage combine --keep
+          coverage report
           coverage xml
           diff-cover coverage.xml --html-report coverage.html
 
@@ -93,7 +95,7 @@ jobs:
       - name: cleanup
         if: github.event_name == 'pull_request'
         run: |
-          rm -f coverage.xml coverage.html
+          rm -f .coverage coverage.xml coverage.html
 
       ### WITH MERGE ###
 
