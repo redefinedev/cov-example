@@ -57,9 +57,11 @@ jobs:
 
       - name: Fetch coverage report from main
         id: fetch-artifact
-        uses: actions/github-script@v3
+        uses: actions/github-script@v7
         with:
           script: |
+            const { github, context } = require("@actions/github");
+
             const run_id = await github.rest.actions.listWorkflowRunsForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
