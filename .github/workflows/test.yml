@@ -85,8 +85,6 @@ jobs:
               throw new Error("Artifact not found");
             }
 
-            console.log(artifact);
-
             core.setOutput('artifact_url', artifact.archive_download_url);  // Set output
             core.setOutput('run_id', artifact.workflow_run.url);  // Set another output if needed
 
@@ -99,6 +97,12 @@ jobs:
           unzip coverage-report-main.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fetch Origin/main for comparison
+        if: github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: git fetch origin main
 
       - name: Merge coverage reports
         if: github.event_name == 'pull_request'
