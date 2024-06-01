@@ -15,6 +15,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          # Required for diff-cover which looks for merge-base between main and PR
+          fetch-depth: 100
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -28,6 +31,13 @@ jobs:
         run: poetry install
 
       - name: Run tests with coverage
+        if: github.event_name == 'pull_request'
+        run: |
+          source .venv/bin/activate
+          pytest tests/test_calculator_new.py --cov
+
+      - name: Run tests with coverage
+        if: github.ref == 'refs/heads/main'
         run: |
           source .venv/bin/activate
           pytest --cov
@@ -54,6 +64,47 @@ jobs:
       ########### MAIN-END ###########
 
       ########### PR-START ###########
+
+      # Required for diff-cover which looks for merge-base between main and PR
+      - name: Fetch Origin/main for comparison
+        if: github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: git fetch origin main
+
+      ### WITHOUT MERGE ###
+
+      - name: Merge coverage reports
+        if: github.event_name == 'pull_request'
+        run: |
+          source .venv/bin/activate
+          coverage combine --keep
+          coverage report
+          coverage xml
+          diff-cover coverage.xml --html-report coverage.html
+
+      - name: Upload PR coverage xml
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-pr-xml-partial
+          retention-days: 1
+          path: coverage.xml
+
+      - name: Upload PR coverage html
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-pr-html-partial
+          retention-days: 1
+          path: coverage.html
+
+      - name: cleanup
+        if: github.event_name == 'pull_request'
+        run: |
+          rm -f .coverage coverage.xml coverage.html
+
+      ### WITH MERGE ###
 
       - name: Fetch coverage report from main
         if: github.event_name == 'pull_request'
@@ -85,10 +136,9 @@ jobs:
               throw new Error("Artifact not found");
             }
 
-            return {
-              artifact_url: artifact.archive_download_url,
-              run_id: artifact.workflow_run.url,
-            };
+            core.setOutput('artifact_url', artifact.archive_download_url);  // Set output
+            core.setOutput('run_id', artifact.workflow_run.url);  // Set another output if needed
+
           result-encoding: string
 
       - name: Download artifact
